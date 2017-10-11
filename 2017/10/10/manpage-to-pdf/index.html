@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  
+  <title>Linux手册页转pdf | NineSong</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="man简介Linux下有很多命令、程序或系统调用等提供了具体详细的手册页。我们可以使用man命令来查看这些手册页。man是英语单词manual的缩写。它最简单的用法就是man 要查阅用法的命令。要查阅它更详细的用法，可以在终端中输入man man。它使用more或less等分页程序。也就是说，它占用整个终端的大小显示手册页，可以使用上下键滚动内容，也可以使用其他键进行查找等操作。 转换手册页格式的">
+<meta name="keywords" content="Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux手册页转pdf">
+<meta property="og:url" content="https://ninesong.github.io/2017/10/10/manpage-to-pdf/index.html">
+<meta property="og:site_name" content="NineSong">
+<meta property="og:description" content="man简介Linux下有很多命令、程序或系统调用等提供了具体详细的手册页。我们可以使用man命令来查看这些手册页。man是英语单词manual的缩写。它最简单的用法就是man 要查阅用法的命令。要查阅它更详细的用法，可以在终端中输入man man。它使用more或less等分页程序。也就是说，它占用整个终端的大小显示手册页，可以使用上下键滚动内容，也可以使用其他键进行查找等操作。 转换手册页格式的">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2017-10-11T18:30:39.745Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux手册页转pdf">
+<meta name="twitter:description" content="man简介Linux下有很多命令、程序或系统调用等提供了具体详细的手册页。我们可以使用man命令来查看这些手册页。man是英语单词manual的缩写。它最简单的用法就是man 要查阅用法的命令。要查阅它更详细的用法，可以在终端中输入man man。它使用more或less等分页程序。也就是说，它占用整个终端的大小显示手册页，可以使用上下键滚动内容，也可以使用其他键进行查找等操作。 转换手册页格式的">
+  
+    <link rel="alternate" href="/atom.xml" title="NineSong" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+  
+
+</head>
+
+<body>
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">NineSong</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS订阅源"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="搜索"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://ninesong.github.io"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-manpage-to-pdf" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/10/10/manpage-to-pdf/" class="article-date">
+  <time datetime="2017-10-10T15:10:46.000Z" itemprop="datePublished">2017-10-10</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/计算机/">计算机</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Linux手册页转pdf
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#man简介"><span class="post-toc-text">man简介</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#转换手册页格式的需求"><span class="post-toc-text">转换手册页格式的需求</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#转换方法"><span class="post-toc-text">转换方法</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#找到手册页文件转换"><span class="post-toc-text">找到手册页文件转换</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#使用man命令的选项直接转换"><span class="post-toc-text">使用man命令的选项直接转换</span></a></li></ol></li></ol>
+
+      
+        <h2 id="man简介"><a href="#man简介" class="headerlink" title="man简介"></a>man简介</h2><p>Linux下有很多命令、程序或系统调用等提供了具体详细的手册页。我们可以使用<code>man</code>命令来查看这些手册页。<code>man</code>是英语单词manual的缩写。它最简单的用法就是<code>man 要查阅用法的命令</code>。要查阅它更详细的用法，可以在终端中输入<code>man man</code>。它使用<code>more</code>或<code>less</code>等分页程序。也就是说，它占用整个终端的大小显示手册页，可以使用上下键滚动内容，也可以使用其他键进行查找等操作。</p>
+<h2 id="转换手册页格式的需求"><a href="#转换手册页格式的需求" class="headerlink" title="转换手册页格式的需求"></a>转换手册页格式的需求</h2><p>在日常使用中，<code>man</code>命令本身已经足够用了。我们可以轻松地在里面进行查找等操作，它也能显示一些排版的信息，如颜色、加粗、下划线等。但是有时候我们需要在别的操作系统或设备上查看这些手册页。这时我们可以把手册页转换为pdf查看。这样可以完美地做到跨平台跨设备，也方便我们打印下来。</p>
+<h2 id="转换方法"><a href="#转换方法" class="headerlink" title="转换方法"></a>转换方法</h2><h3 id="找到手册页文件转换"><a href="#找到手册页文件转换" class="headerlink" title="找到手册页文件转换"></a>找到手册页文件转换</h3><p>查看<code>man</code>的用法（使用<code>man --help</code>或<code>man man</code>或<code>info man</code>），我们发现<code>-w</code>选项可以输出一个手册页的路径。还是以<code>man</code>本身为例，在终端中输入<code>man -w man</code>。</p>
+<figure class="highlight bash"><figcaption><span>输出man手册页的路径</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">user ~ $ man -w man</div><div class="line">/usr/share/man/zh_CN/man1/man.1.bz2</div></pre></td></tr></table></figure>
+<p>这是一个bzip2压缩的文件。<code>bzcat</code>可以直接把bzip2压缩的文件解压输出到<code>stdout</code>（屏幕）。所以实现这个的命令是<code>bzcat `man -w man` </code>。但是我们还不知道它解压后得到的是什么格式的文件，所以直接输出意义不大。我们可以先用<code>file</code>查看解压后文件的类型。因为这个文件来自<code>stdout</code>，是特殊的<code>stdin</code>，所以我们使用<code>file -</code>，其中<code>-</code>表示<code>stdin</code>。将<code>bzcat</code>的结果通过管道传给<code>file</code>，即<code>bzcat `man -w man` | file -</code>。</p>
+<figure class="highlight bash"><figcaption><span>查看man手册页解压后的文件类型</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">user ~ $ bzcat `man -w man` | file -</div><div class="line">/dev/stdin: troff or preprocessor input, UTF-8 Unicode text</div></pre></td></tr></table></figure>
+<p>原来手册页是用bzip2压缩的troff格式排版的文档。在Linux下可以使用<code>groff</code>处理这种文档。查看<code>groff</code>的手册页，发现可以用<code>man</code>或<code>-m man</code>指出我们要处理的是手册页，用<code>-Tpdf</code>可以指出我们希望输出为pdf。几乎马上就要成功了！我们把输出的pdf保存在当前目录下，命名为man.pdf。</p>
+<figure class="highlight bash"><figcaption><span>将man手册页转换为pdf，保存为man.pdf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~ $ bzcat `man -w man` | groff -man -Tpdf &gt; man.pdf</div></pre></td></tr></table></figure>
+<p>好像产生了很多警告。打开一看，发现大部分都是乱码，但是可以看出转换已经成功了！其实乱码的原因很简单。在输出手册页的路径时，我们发现路径中有<code>zh_CN</code>，表示这是中文版的手册页。然而排版使用的字体是英文字体，不包含中文字符，编码似乎也是不对的。至于怎么解决这个问题，我也不知道。为了暂时避开这个棘手的问题，还是指定使用英文原版的手册页吧。<code>man</code>有一个<code>-L</code>选项，就是用来指定locale的。我们在<code>man</code>后面加上<code>-LC</code>选项，表示我们需要locale为C的手册页。C是个特殊的locale，其实约等于没有locale，就是英文字母、ASCII。</p>
+<figure class="highlight bash"><figcaption><span>将man的原版手册页转换为pdf，保存为man.pdf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~ $ bzcat `man -LC -w man` | groff -man -Tpdf &gt; man.pdf</div></pre></td></tr></table></figure>
+<p>现在再次打开pdf，发现就是我们想要的英文版手册页。</p>
+<h3 id="使用man命令的选项直接转换"><a href="#使用man命令的选项直接转换" class="headerlink" title="使用man命令的选项直接转换"></a>使用man命令的选项直接转换</h3><p>如果我们仔细查看<code>man</code>的手册页，我们会发现其实<code>man</code>本身就提供了格式化输出的选项，我们不必像刚才那样大费周折。我们只要像刚才那样指定<code>-T</code>选项即可。而且我们不再需要<code>-w</code>选项，因为我们这次是直接用<code>man</code>对手册页进行处理，而不是手动寻找手册页所在的位置。</p>
+<figure class="highlight bash"><figcaption><span>使用man命令直接把man的原版手册页转换为pdf，保存为manman.pdf</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~ $ man -LC -Tpdf man &gt; manman.pdf</div></pre></td></tr></table></figure>
+<p>打开查看，发现也一样是我们想要的手册页。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ninesong.github.io/2017/10/10/manpage-to-pdf/" data-id="cj8ndhryw0001p50gja1pq0mt" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2017/07/26/data-unit/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">下一篇</strong>
+      <div class="article-nav-title">数据量的单位</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">分类</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/计算机/">计算机</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/Linux/">Linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/单位/">单位</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">标签云</h3>
+    <div class="widget tagcloud">
+      <a href="/tags/Linux/" style="font-size: 10px;">Linux</a> <a href="/tags/单位/" style="font-size: 10px;">单位</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">归档</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/10/">十月 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/07/">七月 2017</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">最新文章</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2017/10/10/manpage-to-pdf/">Linux手册页转pdf</a>
+          </li>
+        
+          <li>
+            <a href="/2017/07/26/data-unit/">数据量的单位</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 zyj<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+  </div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</body>
+</html>
