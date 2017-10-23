@@ -62,6 +62,75 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-linux-make-deb-portable" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2017/10/23/linux-make-deb-portable/" class="article-date">
+  <time datetime="2017-10-22T17:25:42.000Z" itemprop="datePublished">2017-10-23</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/计算机/">计算机</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2017/10/23/linux-make-deb-portable/">从deb包制作“绿色软件”</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+
+      
+        <p>在Linux中，包管理程序是非常重要的。通过包管理程序安装和更新软件看上去似乎很方便，但是因为这些都需要有维护者的支持才得以实现，所以不可能收录所有的软件。有大量的软件有Linux版本，却没有被任何Linux发行版的包管理系统收录进去。它们是以离线的包的形式发布在官方网站上。其中最常见的莫过于针对Ubuntu或类似发行版的deb包。在这些发行版中，使用<code>dpkg</code>命令就可以安装deb包。</p>
+<figure class="highlight bash"><figcaption><span>使用dpkg安装deb包</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~ $ sudo dpkg -i some_package.deb</div></pre></td></tr></table></figure>
+<p>对于其他发行版，<code>dpkg</code>几乎不可用。但这并不意味着不能在其他发行版中使用deb包。其实deb是ar格式的压缩包，可以解压。解压后通常含有<code>data.tar.xz</code>，这里面便是软件所需的文件。把它解压后发现有几个目录。根目录下也有这些目录。其实<code>dpkg</code>会把<code>data.tar.xz</code>直接解压到根目录，这样压缩包中的文件就会被解压到相应的位置。</p>
+<p>然而我们并不一定要把它们放到对应的位置。我们只要拿到软件所需的文件就可以直接使用。比如很多软件会把文件放在<code>/opt</code>下，我们只要进入<code>data.tar.xz</code>的<code>opt</code>目录就可以找到主要的可执行文件。又比如压缩包中含有<code>usr/bin</code>目录，里面是软件的主程序。显然这是为了把主程序放入<code>$PATH</code>中，便于直接执行。这个不必理会，如果确实有这样的需求，可以手动创建软链接。同样地，压缩包中可能还有图标、手册页、desktop文件等资源，我们可以按需获取、适当修改，把所有文件都放在同一个目录下。</p>
+<p>这样我们就初步完成了软件的“绿化”。可以尝试执行软件的主程序。然而，很少有软件可以直接成功执行主程序，因为我们在非Ubuntu或类似发行版下执行为Ubuntu或类似发行版定制的软件。不同的Linux发行版某些系统路径可能会不同。而且deb包也可能有库的依赖的问题。有些deb包中不带有依赖的库，系统中也没有，主程序就无法执行。甚至有些deb包中带有依赖的库，却没有让它的主程序在它自带的库所在的目录搜索依赖的库，还是在系统目录中搜索。我们可以使用<code>ldd</code>命令查看可执行文件依赖的共享库和最终使用的共享库。</p>
+<p>以<code>Send Anywhere</code>软件为例，首先下载<code>sendanywhere_latest_amd64.deb</code>，将deb解压，把<code>data.tar.xz</code>中<code>opt/estmob</code>下的<code>sendanywhere</code>目录解压到家目录。</p>
+<figure class="highlight bash"><figcaption><span>获取软件的文件</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~ $ 7z e -so sendanywhere_latest_amd64.deb data.tar.xz | tar xJC ~ --strip-components=2 opt/estmob/sendanywhere</div></pre></td></tr></table></figure>
+<p>进入该目录，尝试执行主程序。</p>
+<figure class="highlight bash"><figcaption><span>执行主程序</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">user ~ $ <span class="built_in">cd</span> ~/sendanywhere</div><div class="line">user ~/sendanywhere $ ./sendanywhere</div><div class="line">./sendanywhere: /usr/lib64/libQt5Core.so.5: version `Qt_5.9<span class="string">' not found (required by ./sendanywhere)</span></div></pre></td></tr></table></figure>
+<p>它尝试链接系统中的Qt5，却发现版本号不是它想要的5.9。但是我们观察发现，它自带了Qt5的库，所以它应该是没有在当前目录搜索依赖的库。我们用<code>chrpath</code>查看一下。</p>
+<figure class="highlight bash"><figcaption><span>查看主程序依赖的库</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ chrpath -k sendanywhere</div><div class="line">sendanywhere: RPATH=/home/estmob/Qt/5.9/gcc_64/lib</div></pre></td></tr></table></figure>
+<p>这个主程序居然在这样一个奇怪的目录搜索库！我们需要把它修改成当前目录。这里当前目录用<code>$ORIGIN</code>而不是<code>.</code>。注意要用单引号包裹起来，因为不包裹或用双引号包裹会被shell展开，这不是我们想要的效果。</p>
+<figure class="highlight bash"><figcaption><span>修改主程序搜索库的目录为当前目录</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ chrpath -r <span class="string">'$ORIGIN'</span> sendanywhere</div><div class="line">sendanywhere: RPATH=/home/estmob/Qt/5.9/gcc_64/lib</div><div class="line">sendanywhere: new RPATH: <span class="variable">$ORIGIN</span></div></pre></td></tr></table></figure>
+<p>再次运行主程序。</p>
+<figure class="highlight bash"><figcaption><span>运行主程序</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ ./sendanywhere</div><div class="line">This application failed to start because it could not find or load the Qt platform plugin <span class="string">"xcb"</span></div><div class="line"><span class="keyword">in</span> <span class="string">""</span>.</div><div class="line"></div><div class="line">Available platform plugins are: linuxfb, minimal, offscreen, xcb.</div><div class="line"></div><div class="line">Reinstalling the application may fix this problem.</div><div class="line">已放弃 (核心已转储)</div></pre></td></tr></table></figure>
+<p>这次它终于使用了自带的Qt，可是它报了Qt内部的错。这说明不止主程序搜索库的目录不对，其他可执行文件也可能存在这个问题。</p>
+<figure class="highlight bash"><figcaption><span>检查其他可执行文件搜索库的目录</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ chrpath -k lib*</div><div class="line">libcrypto.so.1.0.0: no rpath or runpath tag found.</div><div class="line">libicudata.so.56: RPATH=<span class="variable">$ORIGIN</span>/lib</div><div class="line">libicui18n.so.56: RPATH=<span class="variable">$ORIGIN</span>/lib</div><div class="line">libicuuc.so.56: RPATH=<span class="variable">$ORIGIN</span>/lib</div><div class="line">libQt5Core.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5DBus.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5Gui.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5Network.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5Sql.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5Svg.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5Widgets.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libQt5XcbQpa.so.5: RUNPATH=<span class="variable">$ORIGIN</span></div><div class="line">libssl.so.1.0.0: no rpath or runpath tag found.</div></pre></td></tr></table></figure>
+<p>我们发现icu的库在当前目录下的<code>lib</code>目录下搜索库，而这个目录根本不存在。我们用<code>ldd</code>查看它们到底链接了什么库。</p>
+<figure class="highlight bash"><figcaption><span>查看icu链接的库</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ ldd libicu*</div><div class="line">libicudata.so.56:</div><div class="line">ldd: 警告: 你没有执行权限  `./libicudata.so.56<span class="string">'</span></div><div class="line">	statically linked</div><div class="line">libicui18n.so.56:</div><div class="line">ldd: 警告: 你没有执行权限  `./libicui18n.so.56'</div><div class="line">	linux-vdso.so.1 (0x00007ffdc714e000)</div><div class="line">	libicuuc.so.56 =&gt; not found</div><div class="line">	libicudata.so.56 =&gt; not found</div><div class="line">	libpthread.so.0 =&gt; /lib64/libpthread.so.0 (0x00007f59aeca4000)</div><div class="line">	libdl.so.2 =&gt; /lib64/libdl.so.2 (0x00007f59aeaa0000)</div><div class="line">	libstdc++.so.6 =&gt; /usr/lib/gcc/x86_64-pc-linux-gnu/5.4.0/libstdc++.so.6 (0x00007f59ae6a8000)</div><div class="line">	libm.so.6 =&gt; /lib64/libm.so.6 (0x00007f59ae3a6000)</div><div class="line">	libgcc_s.so.1 =&gt; /usr/lib/gcc/x86_64-pc-linux-gnu/5.4.0/libgcc_s.so.1 (0x00007f59ae18f000)</div><div class="line">	libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f59addf6000)</div><div class="line">	/lib64/ld-linux-x86-64.so.2 (0x00007f59af359000)</div><div class="line">libicuuc.so.56:</div><div class="line">ldd: 警告: 你没有执行权限  `./libicuuc.so.56<span class="string">'</span></div><div class="line">	linux-vdso.so.1 (0x00007fffec7ef000)</div><div class="line">	libicudata.so.56 =&gt; not found</div><div class="line">	libpthread.so.0 =&gt; /lib64/libpthread.so.0 (0x00007f289c508000)</div><div class="line">	libdl.so.2 =&gt; /lib64/libdl.so.2 (0x00007f289c304000)</div><div class="line">	libstdc++.so.6 =&gt; /usr/lib/gcc/x86_64-pc-linux-gnu/5.4.0/libstdc++.so.6 (0x00007f289bf0c000)</div><div class="line">	libm.so.6 =&gt; /lib64/libm.so.6 (0x00007f289bc0a000)</div><div class="line">	libgcc_s.so.1 =&gt; /usr/lib/gcc/x86_64-pc-linux-gnu/5.4.0/libgcc_s.so.1 (0x00007f289b9f3000)</div><div class="line">	libc.so.6 =&gt; /lib64/libc.so.6 (0x00007f289b65a000)</div><div class="line">	/lib64/ld-linux-x86-64.so.2 (0x00007f289cadc000)</div></pre></td></tr></table></figure>
+<p><code>libicudata.so.56</code>不需要管，它是静态链接的。另外两个找不到链接库的显然是找错了地方，应该在<code>$ORIGIN</code>下找，却到<code>$ORIGIN/lib</code>这样一个不存在的目录去找了，系统的库目录中也没有，所以没法正常运行。只需要将它们搜索库的目录改成<code>$ORIGIN</code>就可以了。</p>
+<figure class="highlight bash"><figcaption><span>查看主程序依赖的库</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ chrpath -r <span class="string">'$ORIGIN'</span> libicui18n.so.56 libicuuc.so.56</div><div class="line">libicui18n.so.56: RPATH=<span class="variable">$ORIGIN</span>/lib</div><div class="line">libicui18n.so.56: new RPATH: <span class="variable">$ORIGIN</span></div><div class="line">libicuuc.so.56: RPATH=<span class="variable">$ORIGIN</span>/lib</div><div class="line">libicuuc.so.56: new RPATH: <span class="variable">$ORIGIN</span></div></pre></td></tr></table></figure>
+<p>我们再次使用<code>ldd</code>检查所有可执行文件，看看它们是不是都链接到了正确的库，有没有链接失败的。执行<code>ldd sendanywhere lib*</code>，仔细检查，没有发现问题。</p>
+<p>子目录中也有很多库。只要一一修改它们搜索库的目录就可以了。修改前先用<code>ldd</code>确认一下链接的库。经过一番查看，显然这些库都想链接Qt5的库，只要让它们都搜索上一级目录的库即可。</p>
+<figure class="highlight bash"><figcaption><span>修改其他可执行文件</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user ~/sendanywhere $ find -mindepth 2 -name <span class="string">"lib*"</span> -<span class="built_in">exec</span> chrpath -r <span class="string">'$ORIGIN/..'</span> <span class="string">'&#123;&#125;'</span> \;</div></pre></td></tr></table></figure>
+<p>这样以后，软件就能正常运行了。所谓的Ubuntu版软件就可以在其他发行版中使用了。但是有些deb中不带有依赖，这就需要我们自己解决。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://ninesong.github.io/2017/10/23/linux-make-deb-portable/" data-id="cj9440mor0001v00bd1bbugll" class="article-share-link">分享</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-manpage-to-pdf" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2017/10/10/manpage-to-pdf/" class="article-date">
@@ -108,7 +177,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ninesong.github.io/2017/10/10/manpage-to-pdf/" data-id="cj8ndhryw0001p50gja1pq0mt" class="article-share-link">分享</a>
+      <a data-url="https://ninesong.github.io/2017/10/10/manpage-to-pdf/" data-id="cj9440mpl0004v00bvkrcvk8m" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Linux/">Linux</a></li></ul>
@@ -283,7 +352,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://ninesong.github.io/2017/07/26/data-unit/" data-id="cj8ndhry40000p50gngq753d7" class="article-share-link">分享</a>
+      <a data-url="https://ninesong.github.io/2017/07/26/data-unit/" data-id="cj9440mns0000v00b6rcildyw" class="article-share-link">分享</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/单位/">单位</a></li></ul>
@@ -324,7 +393,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">标签云</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Linux/" style="font-size: 10px;">Linux</a> <a href="/tags/单位/" style="font-size: 10px;">单位</a>
+      <a href="/tags/Linux/" style="font-size: 20px;">Linux</a> <a href="/tags/单位/" style="font-size: 10px;">单位</a>
     </div>
   </div>
 
@@ -344,6 +413,10 @@
     <h3 class="widget-title">最新文章</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2017/10/23/linux-make-deb-portable/">从deb包制作“绿色软件”</a>
+          </li>
         
           <li>
             <a href="/2017/10/10/manpage-to-pdf/">Linux手册页转pdf</a>
